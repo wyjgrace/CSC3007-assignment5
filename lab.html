@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.css"
+    />
+    <style>
+      #map {
+        width: 1000px;
+        height: 600px;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.js"></script>
+
+    <div id="map"></div>
+    <script>
+      // let tiles = new L.TileLayer(
+      //   "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      // );
+
+      // let tiles = new L.tileLayer(
+      //   "https://maps-{s}.onemap.sg/v3/Default/{z}/{x}/{y}.png",
+      //   {
+      //     detectRetina: true,
+      //     maxZoom: 18,
+      //     minZoom: 11,
+      //     //Do not remove this attribution
+      //     attribution:
+      //       '<img src="https://docs.onemap.sg/maps/images/oneMap64-01.png" style="height:20px;width:20px;">' +
+      //       'New OneMap | Map data © contributors, <a href="http://SLA.gov.sg">Singapore Land Authority</a>',
+      //   }
+      // );
+
+      // let tiles = new L.tileLayer(
+      //   "http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+      //   {
+      //     maxZoom: 20,
+      //     subdomains: ["mt0", "mt1", "mt2", "mt3"],
+      //   }
+      // );
+
+      let tiles = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+        {
+          attribution: "Tiles © Esri",
+        }
+      );
+
+      // let map = new L.Map("map", {
+      //   center: [1.347833, 103.809357],
+      //   zoom: 12,
+      // }).addLayer(tiles);
+
+      let map = new L.Map("map", {
+        center: [1.347833, 103.809357],
+        zoom: 11,
+        maxBounds: L.latLngBounds(L.latLng(1.1, 103.5), L.latLng(1.5, 104.3)),
+      }).addLayer(tiles);
+    </script>
+  </body>
+</html>

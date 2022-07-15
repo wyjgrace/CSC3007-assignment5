@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.css"
+    />
+    <style>
+      #mapdiv {
+        height: 800px;
+      }
+
+      .my-custom-icon {
+        text-align: center;
+        color: black;
+        font-size: 20px;
+      }
+
+      .time {
+        display: inline;
+        font-weight: bold;
+      }
+
+      .circle {
+        height: 15px;
+        width: 15px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.0/moment.min.js"></script>
+    <h2>Live PSI 24hr reading on the map</h2>
+    <div class="time">
+      Last Updated
+      <span id="time"></span>
+    </div>
+    <div id="mapdiv"></div>
+    <script>
+      Promise.all([d3.json("https://api.data.gov.sg/v1/environment/psi")]).then(
+        (data) => {
+          console.log(data);
+          document.getElementById("time").innerHTML = moment(
+            data[0].items[0]["update_timestamp"]
+          ).format("MMMM Do YYYY, h:mm");
+          var region_metadata = data[0].region_metadata;
+          var psi = data[0].items[0].readings.psi_twenty_four_hourly;
+          //   console.log(region_metadata);
+          //   console.log(psi);
+          var color;
+
+          for (let i = 0; i < region_metadata.length; i++) {
+            let location = region_metadata[i].name;
+
+            if (location != "national") {
+              if (psi[location] <= 50) {
+                color = "green";
+              } else if (psi[location] <= 100) {
+                color = "blue";
+              } else if (psi[location] <= 200) {
+                color = "yellow";
+              } else if (psi[location] <= 300) {
+                color = "orange";
+              } else if (psi[location] > 300) {
+                color = "red";
+              }
+
+              var circle = L.circle(
+                [
+                  region_metadata[i].label_location.latitude,
+                  region_metadata[i].label_location.longitude,
+                ],
+                {
+                  color: color,
+                  fillColor: color,
+                  fillOpacity: 0.5,
+                  radius: 1000,
+                }
+              ).addTo(map);
+
+              var icon = L.marker(
+                [
+                  region_metadata[i].label_location.latitude,
+                  region_metadata[i].label_location.longitude,
+                ],
+                {
+                  icon: L.divIcon({
+                    className: "my-custom-icon",
+                    html: psi[location],
+                  }),
+                }
+              );
+
+              icon.addTo(map);
+            }
+          }
+        }
+      );
+
+      var center = L.bounds([1.56073, 104.11475], [1.16, 103.502]).getCenter();
+      var map = L.map("mapdiv", {
+        dragging: false,
+        scrollWheelZoom: false,
+        zoomControl: false,
+      }).setView([center.x, center.y], 12);
+
+      var basemap = L.tileLayer(
+        "https://maps-{s}.onemap.sg/v3/Default/{z}/{x}/{y}.png",
+        {
+          detectRetina: true,
+          maxZoom: 18,
+          minZoom: 11,
+          //Do not remove this attribution
+          attribution:
+            '<img src="https://docs.onemap.sg/maps/images/oneMap64-01.png" style="height:20px;width:20px;">' +
+            'New OneMap | Map data © contributors, <a href="http://SLA.gov.sg">Singapore Land Authority</a>',
+        }
+      );
+
+      map.setMaxBounds([
+        [1.56073, 104.1147],
+        [1.16, 103.502],
+      ]);
+
+      basemap.addTo(map);
+
+      var legend = L.control({ position: "bottomleft" });
+      legend.onAdd = function (map) {
+        var div = L.DomUtil.create("div", "info legend");
+        (labels = ["<strong>Legend</strong>"]),
+          (categories = [
+            "Good",
+            "Moderate",
+            "Unhealthy",
+            "Very Unhealthy",
+            "Hazardous",
+          ]);
+
+        for (var i = 0; i < categories.length; i++) {
+          div.innerHTML += labels.push(
+            '<i class="circle" style="background:' +
+              getColor(categories[i]) +
+              '"></i> ' +
+              (categories[i] ? categories[i] : "+")
+          );
+        }
+        div.innerHTML = labels.join("<br>");
+        console.log(div.innerHTML);
+        return div;
+      };
+      legend.addTo(map);
+
+      function getColor(d) {
+        return d == "Good"
+          ? "green"
+          : d == "Moderate"
+          ? "blue"
+          : d == "Unhealthy"
+          ? "yellow"
+          : d == "Very Unhealthy"
+          ? "orange"
+          : "red";
+      }
+    </script>
+  </body>
+</html>
